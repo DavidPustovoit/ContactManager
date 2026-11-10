@@ -16,22 +16,29 @@ namespace ContactManager.App.Forms
             InitializeComponent();
             _validator = new ContactValidator(repository);
 
-            if (contact != null)
+            this.AcceptButton = btnSave;
+            this.CancelButton = btnCancel;
+
+            CurrentContact = contact == null ? new Contact() : new Contact
             {
-                CurrentContact = contact;
-                txtFirstName.Text = contact.FirstName;
-                txtLastName.Text = contact.LastName;
-                txtPhone.Text = contact.Phone;
-                txtEmail.Text = contact.Email;
-                txtAddress.Text = contact.Address;
-                txtNotes.Text = contact.Notes;
-                this.Text = "Редагувати контакт";
-            }
-            else
-            {
-                CurrentContact = new Contact();
-                this.Text = "Додати контакт";
-            }
+                Id = contact.Id,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName,
+                Phone = contact.Phone,
+                Email = contact.Email,
+                Address = contact.Address,
+                Notes = contact.Notes,
+                CreatedAt = contact.CreatedAt
+            };
+
+            txtFirstName.Text = CurrentContact.FirstName;
+            txtLastName.Text = CurrentContact.LastName;
+            txtPhone.Text = CurrentContact.Phone;
+            txtEmail.Text = CurrentContact.Email;
+            txtAddress.Text = CurrentContact.Address;
+            txtNotes.Text = CurrentContact.Notes;
+
+            this.Text = contact == null ? "Додати контакт" : "Редагувати контакт";
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -43,14 +50,21 @@ namespace ContactManager.App.Forms
             CurrentContact.Address = txtAddress.Text.Trim();
             CurrentContact.Notes = txtNotes.Text.Trim();
 
-            if (!_validator.Validate(CurrentContact, CurrentContact.Id == 0 ? (int?)null : CurrentContact.Id))
+            try
             {
-                MessageBox.Show(_validator.ErrorMessage, "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+                if (!_validator.Validate(CurrentContact))
+                {
+                    MessageBox.Show(_validator.ErrorMessage, "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Помилка перевірки", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void BtnCancel_Click(object sender, EventArgs e)

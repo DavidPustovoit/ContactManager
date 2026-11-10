@@ -11,13 +11,17 @@ namespace ContactManager.App.Forms
         public Form1()
         {
             InitializeComponent();
+
+            dgvContacts.DataBindingComplete += (s, e) => FormatGrid();
+            dgvContacts.MultiSelect = false;
+
             try
             {
                 _repository = new ContactRepository();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Критична помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Критична помилка ініціалізації", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(1);
             }
         }
@@ -25,7 +29,6 @@ namespace ContactManager.App.Forms
         private void Form1_Load(object sender, EventArgs e)
         {
             LoadContactsData();
-            FormatGrid();
         }
 
         private void LoadContactsData(string keyword = "")
@@ -48,7 +51,6 @@ namespace ContactManager.App.Forms
         {
             if (dgvContacts.Columns.Count == 0) return;
 
-            // Ховаємо технічні та дублюючі колонки
             dgvContacts.Columns["Id"].Visible = false;
             dgvContacts.Columns["FirstName"].Visible = false;
             dgvContacts.Columns["LastName"].Visible = false;
@@ -76,7 +78,11 @@ namespace ContactManager.App.Forms
             {
                 if (form.ShowDialog() == DialogResult.OK)
                 {
-                    try { _repository.AddContact(form.CurrentContact); LoadContactsData(); }
+                    try
+                    {
+                        _repository.AddContact(form.CurrentContact);
+                        LoadContactsData(txtSearch.Text.Trim());
+                    }
                     catch (Exception ex) { MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 }
             }
@@ -93,7 +99,11 @@ namespace ContactManager.App.Forms
             {
                 if (form.ShowDialog() == DialogResult.OK)
                 {
-                    try { _repository.UpdateContact(form.CurrentContact); LoadContactsData(); }
+                    try
+                    {
+                        _repository.UpdateContact(form.CurrentContact);
+                        LoadContactsData(txtSearch.Text.Trim());
+                    }
                     catch (Exception ex) { MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 }
             }
@@ -108,15 +118,16 @@ namespace ContactManager.App.Forms
 
             if (MessageBox.Show($"Видалити контакт {selectedContact.FullName}?", "Підтвердження", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                try { _repository.DeleteContact(selectedContact.Id); LoadContactsData(); }
+                try
+                {
+                    _repository.DeleteContact(selectedContact.Id);
+                    LoadContactsData(txtSearch.Text.Trim());
+                }
                 catch (Exception ex) { MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
         }
 
-        private void BtnSearch_Click(object sender, EventArgs e)
-        {
-            LoadContactsData(txtSearch.Text.Trim());
-        }
+        private void BtnSearch_Click(object sender, EventArgs e) => LoadContactsData(txtSearch.Text.Trim());
 
         private void ExitToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
 

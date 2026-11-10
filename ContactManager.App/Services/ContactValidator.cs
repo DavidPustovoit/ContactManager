@@ -15,23 +15,24 @@ namespace ContactManager.App.Services
             _repository = repository;
         }
 
-        public bool Validate(Contact contact, int? currentContactId = null)
+        public bool Validate(Contact contact)
         {
-            if (string.IsNullOrWhiteSpace(contact.FirstName))
+            if (string.IsNullOrWhiteSpace(contact.FirstName) || !Regex.IsMatch(contact.FirstName, @"^[\p{L}\p{M}\-'’ʼ ]+$"))
             {
-                ErrorMessage = "Ім'я є обов'язковим для заповнення.";
+                ErrorMessage = "Ім'я є обов'язковим і може містити лише літери, пробіли, дефіси та апострофи.";
                 return false;
             }
 
-            if (!Regex.IsMatch(contact.FirstName, @"^[\p{L}\-']+$"))
+            if (!string.IsNullOrWhiteSpace(contact.LastName) && !Regex.IsMatch(contact.LastName, @"^[\p{L}\p{M}\-'’ʼ ]+$"))
             {
-                ErrorMessage = "Ім'я містить некоректні символи (дозволені лише літери, дефіс та апостроф).";
+                ErrorMessage = "Прізвище містить некоректні символи.";
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(contact.Phone) || !Regex.IsMatch(contact.Phone, @"^[\d\+\-\(\) ]+$"))
+            int digitCount = contact.Phone?.Count(char.IsDigit) ?? 0;
+            if (string.IsNullOrWhiteSpace(contact.Phone) || digitCount < 7 || digitCount > 15)
             {
-                ErrorMessage = "Телефон порожній або містить некоректні символи.";
+                ErrorMessage = "Телефон повинен містити від 7 до 15 цифр.";
                 return false;
             }
 
@@ -41,10 +42,10 @@ namespace ContactManager.App.Services
                 return false;
             }
 
-            var allContacts = _repository.GetAllContacts();
-            if (allContacts.Any(c => c.Phone == contact.Phone && c.Id != currentContactId))
+            // Перевірка на дублікат (співпадіння останніх 9 цифр)
+            if (_repository.IsPhoneDuplicate(contact.Phone, contact.Id == 0 ? (int?)null : contact.Id))
             {
-                ErrorMessage = "Контакт із таким номером телефону вже існує в базі.";
+                ErrorMessage = "Контакт із таким номером телефону вже існує.";
                 return false;
             }
 
