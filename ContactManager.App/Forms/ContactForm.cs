@@ -18,6 +18,7 @@ namespace ContactManager.App.Forms
 
             this.AcceptButton = btnSave;
             this.CancelButton = btnCancel;
+            this.txtNotes.AcceptsReturn = true;
 
             CurrentContact = contact == null ? new Contact() : new Contact
             {

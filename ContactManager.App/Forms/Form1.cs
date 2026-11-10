@@ -43,7 +43,8 @@ namespace ContactManager.App.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string errorMsg = ex.InnerException != null ? $"{ex.Message}\n\nДеталі: {ex.InnerException.Message}" : ex.Message;
+                MessageBox.Show(errorMsg, "Помилка бази даних", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -81,16 +82,25 @@ namespace ContactManager.App.Forms
                     try
                     {
                         _repository.AddContact(form.CurrentContact);
-                        LoadContactsData(txtSearch.Text.Trim());
+                        txtSearch.Clear();
+                        LoadContactsData();
                     }
-                    catch (Exception ex) { MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                    catch (Exception ex)
+                    {
+                        string errorMsg = ex.InnerException != null ? $"{ex.Message}\n\n{ex.InnerException.Message}" : ex.Message;
+                        MessageBox.Show(errorMsg, "Помилка збереження", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }
 
         private void BtnEdit_Click(object sender, EventArgs e)
         {
-            if (dgvContacts.SelectedRows.Count == 0) return;
+            if (dgvContacts.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Будь ласка, оберіть контакт для редагування.", "Увага", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
             var selectedContact = dgvContacts.SelectedRows[0].DataBoundItem as ContactManager.App.Models.Contact;
             if (selectedContact == null) return;
@@ -104,14 +114,22 @@ namespace ContactManager.App.Forms
                         _repository.UpdateContact(form.CurrentContact);
                         LoadContactsData(txtSearch.Text.Trim());
                     }
-                    catch (Exception ex) { MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                    catch (Exception ex)
+                    {
+                        string errorMsg = ex.InnerException != null ? $"{ex.Message}\n\n{ex.InnerException.Message}" : ex.Message;
+                        MessageBox.Show(errorMsg, "Помилка оновлення", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
         {
-            if (dgvContacts.SelectedRows.Count == 0) return;
+            if (dgvContacts.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Будь ласка, оберіть контакт для видалення.", "Увага", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
             var selectedContact = dgvContacts.SelectedRows[0].DataBoundItem as ContactManager.App.Models.Contact;
             if (selectedContact == null) return;
@@ -123,7 +141,11 @@ namespace ContactManager.App.Forms
                     _repository.DeleteContact(selectedContact.Id);
                     LoadContactsData(txtSearch.Text.Trim());
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex)
+                {
+                    string errorMsg = ex.InnerException != null ? $"{ex.Message}\n\n{ex.InnerException.Message}" : ex.Message;
+                    MessageBox.Show(errorMsg, "Помилка видалення", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

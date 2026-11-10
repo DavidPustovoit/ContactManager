@@ -74,7 +74,7 @@ namespace ContactManager.App.Data
 
         public bool IsPhoneDuplicate(string newPhone, int? currentId)
         {
-            string digits = new string(newPhone.Where(char.IsDigit).ToArray());
+            string digits = new string(newPhone.Where(char.IsAsciiDigit).ToArray());
             if (digits.Length >= 9) digits = digits.Substring(digits.Length - 9);
 
             using IDbConnection db = new SqliteConnection(_connectionString);
@@ -82,7 +82,7 @@ namespace ContactManager.App.Data
 
             foreach (var row in existingPhones)
             {
-                string dbDigits = new string(((string)row.Phone).Where(char.IsDigit).ToArray());
+                string dbDigits = new string(((string)row.Phone).Where(char.IsAsciiDigit).ToArray());
                 if (dbDigits.EndsWith(digits)) return true;
             }
             return false;
