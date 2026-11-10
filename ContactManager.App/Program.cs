@@ -1,4 +1,6 @@
-namespace ContactManager.App;
+using System;
+using System.Windows.Forms;
+using ContactManager.App.Forms;
 
 static class Program
 {

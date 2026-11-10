@@ -1,18 +1,20 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using ContactManager.App.Models;
+using ContactManager.App.Services;
+using ContactManager.App.Data;
 
-namespace ContactManager.App
+namespace ContactManager.App.Forms
 {
     public partial class ContactForm : Form
     {
         public Contact CurrentContact { get; private set; }
+        private readonly ContactValidator _validator;
 
-        // Якщо передаємо null - це створення нового, якщо передаємо контакт - редагування
-        public ContactForm(Contact? contact = null)
+        public ContactForm(ContactRepository repository, Contact? contact = null)
         {
             InitializeComponent();
+            _validator = new ContactValidator(repository);
 
             if (contact != null)
             {
@@ -34,25 +36,6 @@ namespace ContactManager.App
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            // Валідація: Обов'язкові поля
-            if (string.IsNullOrWhiteSpace(txtFirstName.Text) || string.IsNullOrWhiteSpace(txtPhone.Text))
-            {
-                MessageBox.Show("Поля 'Ім'я' та 'Телефон' є обов'язковими для заповнення!", "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // Валідація: Email (якщо він заповнений)
-            if (!string.IsNullOrWhiteSpace(txtEmail.Text))
-            {
-                string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-                if (!Regex.IsMatch(txtEmail.Text, emailPattern))
-                {
-                    MessageBox.Show("Введіть коректну Email адресу!", "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-            }
-
-            // Запис даних в об'єкт
             CurrentContact.FirstName = txtFirstName.Text.Trim();
             CurrentContact.LastName = txtLastName.Text.Trim();
             CurrentContact.Phone = txtPhone.Text.Trim();
@@ -60,7 +43,13 @@ namespace ContactManager.App
             CurrentContact.Address = txtAddress.Text.Trim();
             CurrentContact.Notes = txtNotes.Text.Trim();
 
-            this.DialogResult = DialogResult.OK; // Сигнал головній формі, що все успішно
+            if (!_validator.Validate(CurrentContact, CurrentContact.Id == 0 ? (int?)null : CurrentContact.Id))
+            {
+                MessageBox.Show(_validator.ErrorMessage, "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
